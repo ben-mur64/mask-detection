@@ -4,8 +4,9 @@ import tensorflow as tf
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 
+from keras.applications import MobileNetV2
 from keras.models import Model
-from keras.layers import Input, Dense, Activation, Conv2D, MaxPooling2D, Flatten, BatchNormalization, Dropout
+from keras.layers import Input, Dense, Activation, SeparableConv2D, MaxPooling2D, Flatten, BatchNormalization, Dropout
 from keras.optimizers import Adam
 
 batch_size = 40
@@ -65,25 +66,82 @@ testing_ds = testing_ds.cache().prefetch(buffer_size=AUTOTUNE)
 # 
 inputs = Input(shape=(img_height, img_width, 3))
 
-# 2 Convolutional layers each followed by max pooling
-x = Conv2D(200, kernel_size=(5, 5), kernel_initializer='he_normal')(inputs)
-x = BatchNormalization()(x)
-x = Activation('relu')(x)
-x = MaxPooling2D(pool_size=(2, 2))(x)
+x = layers.Conv2D(32, 3, strides=2, padding="same")(inputs)
+x = layers.BatchNormalization()(x)
+x = layers.Activation("relu")(x)
 
-x = Conv2D(100, kernel_size=(3, 3), activation='relu', kernel_initializer='he_normal')(x)
-x = BatchNormalization()(x)
-x = Activation('relu')(x)
-x = MaxPooling2D(pool_size=(2, 2))(x)
+x = layers.Conv2D(64, 3, padding="same")(x)
+x = layers.BatchNormalization()(x)
+x = layers.Activation("relu")(x)
 
-# Here we'll add a single Dense layer before the prediction
-x = Flatten()(x)
-x = Dense(128, activation='relu', kernel_initializer='he_normal')(x)
-x = Dropout(0.5)(x)
-predictions = Dense(1, activation='softmax')(x)
+previous_block_activation = x  # Set aside residual
 
-model = Model(inputs=inputs, outputs=predictions)
+for size in [128, 256, 512, 728]:
+    x = layers.Activation("relu")(x)
+    x = layers.SeparableConv2D(size, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+
+    x = layers.Activation("relu")(x)
+    x = layers.SeparableConv2D(size, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+
+    x = layers.MaxPooling2D(3, strides=2, padding="same")(x)
+
+    # Project residual
+    residual = layers.Conv2D(size, 1, strides=2, padding="same")(
+        previous_block_activation
+    )
+    x = layers.add([x, residual])  # Add back residual
+    previous_block_activation = x  # Set aside next residual
+
+x = layers.SeparableConv2D(1024, 3, padding="same")(x)
+x = layers.BatchNormalization()(x)
+x = layers.Activation("relu")(x)
+
+x = layers.GlobalAveragePooling2D()(x)
+activation = "sigmoid"
+units = 1
+
+x = layers.Dropout(0.5)(x)
+outputs = layers.Dense(units, activation=activation)(x)
+
+model = Model(inputs=inputs, outputs=outputs)
 print(model.summary())
+# 2 Convolutional layers each followed by max pooling
+# x = SeparableConv2D(32, kernel_size=(5, 5), kernel_initializer='he_normal')(inputs)
+# x = BatchNormalization()(x)
+# x = Activation('relu')(x)
+# x = MaxPooling2D(pool_size=(2, 2))(x)
 
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-model.fit(training_ds, epochs=5, batch_size=32, validation_data=testing_ds)
+# x = SeparableConv2D(64, kernel_size=(3, 3), activation='relu', kernel_initializer='he_normal')(x)
+# x = BatchNormalization()(x)
+# x = Activation('relu')(x)
+# x = MaxPooling2D(pool_size=(2, 2))(x)
+
+# x = SeparableConv2D(128, kernel_size=(3, 3), activation='relu', kernel_initializer='he_normal')(x)
+# x = BatchNormalization()(x)
+# x = Activation('relu')(x)
+# x = MaxPooling2D(pool_size=(2, 2))(x)
+
+# x = SeparableConv2D(256, kernel_size=(3, 3), activation='relu', kernel_initializer='he_normal')(x)
+# x = BatchNormalization()(x)
+# x = Activation('relu')(x)
+# x = MaxPooling2D(pool_size=(2, 2))(x)
+
+# x = Flatten()(x)
+# x = Dense(128, activation='relu', kernel_initializer='he_normal')(x)
+# x = Dropout(0.5)(x)
+# x = Dense(2, activation='softmax')(x)
+
+# Different go at it
+# base = MobileNetV2(weights="imagenet", include_top=False, input_tensor=inputs)
+
+# x = base.output
+# x = MaxPooling2D(pool_size=(7,7))(x)
+# x = Flatten(name="flatten")(x)
+# x = Dense(128, activation='relu')(x)
+# x = Dropout(0.5)(x)
+# x = Dense(2, activation='softmax')(x)
+
+model.compile(optimizer=Adam(1e-3), loss='binary_crossentropy', metrics=['accuracy'])
+model.fit(training_ds, epochs=6, batch_size=32, validation_data=testing_ds)
