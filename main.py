@@ -3,6 +3,7 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
+from sklearn.metrics import classification_report, confusion_matrix
 
 from keras.applications import MobileNetV2
 from keras.models import Model, save_model, load_model
@@ -13,6 +14,7 @@ batch_size = 40
 img_height = 200
 img_width = 200
 
+# Best validation accuracy .9662
 BUILDING = False
 LOADING = True
 
@@ -62,8 +64,9 @@ def build_model(img_height, img_width):
     print(model.summary())
 
     model.compile(optimizer=Adam(1e-3), loss='binary_crossentropy', metrics=['accuracy'])
-    model.fit(training_ds, epochs=6, batch_size=32, validation_data=testing_ds)
+    model.fit(training_ds, epochs=10, batch_size=32, validation_data=testing_ds)
     save_model(model, "./best_model")
+    return model
 
 def load():
     model = load_model('best_model')
@@ -117,15 +120,13 @@ training_ds = training_ds.cache().prefetch(buffer_size=AUTOTUNE)
 testing_ds = testing_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
 if BUILDING:
-    build_model(img_height, img_width)
+    model = build_model(img_height, img_width)
 
 if LOADING:
     model = load()
 
 predict = model.predict(testing_ds)
+predict = [1 * (x[0]>=0.5) for x in predict]
 true = np.concatenate([y for x,y in testing_ds], axis=0)
-con_mat = tf.math.confusion_matrix(labels=true, predictions=predict)
-print(con_mat)
-
-# # Now build a deep neural network and train it and see how you do
-
+print(confusion_matrix(true,predict))
+print(classification_report(true,predict))
