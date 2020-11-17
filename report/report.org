@@ -1,0 +1,38 @@
+#+TITLE: Deep Learning Assignment
+#+DESCRIPTION: Deep Learning assignment due 11/16/2020
+#+AUTHOR: Ben Murray
+
+* Description
+
+I started using the example given in class from the simple CNN lecture.
+That didn't perform very well, coming in at about 50.39% accuracy, little better than a coinflip, so I moved on to other ideas.
+I tried several different shallow neural nets, and those performed poorly as well.
+I then tried freezing an imagenet instance as the bottom half of the net, with trainable weights on top.
+It got around 70% accuracy.
+I then landed on a Keras tutorial page that used several different layers, separable convolutional layers, and projecting the residual forward.
+That network worked really well, and was the final network I used.
+Code can be found at my [[https://github.com/ben-mur64/mask-detection][Github]].
+
+* Confusion Matrix
+
+| 732 |  10 |
+|  41 | 727 |
+
+* Classification Report
+
+|              | Presicion | Recall | F1-score | Support |
+| 0            |      0.95 |   0.99 |     0.97 |     742 |
+| 1            |      0.99 |   0.95 |     0.97 |     768 |
+|              |           |        |          |         |
+| Accuracy     |           |        |     0.97 |    1510 |
+| Macro Avg    |      0.97 |   0.97 |     0.97 |    1510 |
+| Weighted Avg |      0.97 |   0.97 |     0.97 |    1510 |
+
+* Teammate Scores
+
+| Teammate       | Accuracy |
+|----------------+----------|
+| Marshal Taylor |   0.9503 |
+| Michael Gibson |    0.992 |
+| Matthew Obray  |    .9506 |
+| Jon Peters     |     0.92 |

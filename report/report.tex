@@ -1,0 +1,83 @@
+% Created 2020-11-16 Mon 18:24
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\author{Ben Murray}
+\date{\today}
+\title{Deep Learning Assignment}
+\hypersetup{
+ pdfauthor={Ben Murray},
+ pdftitle={Deep Learning Assignment},
+ pdfkeywords={},
+ pdfsubject={Deep Learning assignment due 11/16/2020},
+ pdfcreator={Emacs 26.1 (Org mode 9.4)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+
+\section{Description}
+\label{sec:orga9af92d}
+
+I started using the example given in class from the simple CNN lecture.
+That didn't perform very well, coming in at about 50.39\% accuracy, little better than a coinflip, so I moved on to other ideas.
+I tried several different shallow neural nets, and those performed poorly as well.
+I then tried freezing an imagenet instance as the bottom half of the net, with trainable weights on top.
+It got around 70\% accuracy.
+I then landed on a Keras tutorial page that used several different layers, separable convolutional layers, and projecting the residual forward.
+That network worked really well, and was the final network I used.
+Code can be found at my \href{https://github.com/ben-mur64/mask-detection}{Github}.
+
+\section{Confusion Matrix}
+\label{sec:org3720cc1}
+
+\begin{center}
+\begin{tabular}{rr}
+732 & 10\\
+41 & 727\\
+\end{tabular}
+\end{center}
+
+\section{Classification Report}
+\label{sec:org4739de7}
+
+\begin{center}
+\begin{tabular}{lrrrr}
+ & Presicion & Recall & F1-score & Support\\
+0 & 0.95 & 0.99 & 0.97 & 742\\
+1 & 0.99 & 0.95 & 0.97 & 768\\
+ &  &  &  & \\
+Accuracy &  &  & 0.97 & 1510\\
+Macro Avg & 0.97 & 0.97 & 0.97 & 1510\\
+Weighted Avg & 0.97 & 0.97 & 0.97 & 1510\\
+\end{tabular}
+\end{center}
+
+\section{Teammate Scores}
+\label{sec:org0751820}
+
+\begin{center}
+\begin{tabular}{lr}
+Teammate & Accuracy\\
+\hline
+Marshal Taylor & 0.9503\\
+Michael Gibson & 0.992\\
+Matthew Obray & .9506\\
+Jon Peters & 0.92\\
+\end{tabular}
+\end{center}
+\end{document}
